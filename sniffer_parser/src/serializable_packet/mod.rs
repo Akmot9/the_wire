@@ -10,7 +10,6 @@
 pub mod application;
 pub mod network;
 pub mod transport;
-#[cfg(feature = "utils")]
 pub mod util;
 
 use pnet::packet::Packet;

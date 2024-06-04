@@ -8,6 +8,15 @@
 
 /// This example shows a basic packet logger using libpnet
 extern crate pnet;
+extern crate sniffer_parser;
+
+use sniffer_parser::serializable_packet::util::{
+    contains_arp, contains_dns, contains_ethernet, contains_http, contains_icmp, contains_icmp6,
+    contains_ipv4, contains_ipv6, contains_malformed, contains_tcp, contains_tls, contains_udp,
+    contains_unknokn, get_dest_ip, get_dest_mac, get_dest_port, get_source_ip, get_source_mac,
+    get_source_port,
+};
+use sniffer_parser::HeaderLength;
 
 use pnet::datalink::{self, NetworkInterface};
 
