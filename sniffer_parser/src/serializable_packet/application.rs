@@ -1,8 +1,7 @@
 //! Application level Packets Representation
 
 use std::{
-    net::{Ipv4Addr, Ipv6Addr},
-    str::from_utf8,
+    fmt, net::{Ipv4Addr, Ipv6Addr}, str::from_utf8
 };
 
 use dns_parser::{Header as DnsHeader, Packet as DnsPacket, Question, RData, ResourceRecord};
@@ -18,6 +17,9 @@ use tls_parser::{
     TlsServerHelloV13Draft18Contents, TlsServerKeyExchangeContents, TlsVersion,
 };
 use x509_parser::{parse_x509_certificate, prelude::X509Certificate};
+
+use crate::modbus::{self, ModbusPacket};
+
 
 /// HTTP Body content
 #[derive(Serialize, Debug, Clone)]
@@ -67,6 +69,25 @@ impl<'a, 'b> SerializableHttpRequestPacket {
     }
 }
 
+impl fmt::Display for SerializableHttpRequestPacket {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "HTTP Request: \n\
+            \tMethod: {}\n\
+            \tPath: {}\n\
+            \tVersion: {}\n\
+            \tHeaders: {:?}\n\
+            \tPayload: {:?}",
+            self.method,
+            self.path,
+            self.version,
+            self.headers,
+            self.payload
+        )
+    }
+}
+
 /// HTTP Response Packet Representation
 #[derive(Serialize, Debug, Clone)]
 pub struct SerializableHttpResponsePacket {
@@ -97,6 +118,40 @@ impl<'a, 'b> SerializableHttpResponsePacket {
                 .collect(),
             payload,
         }
+    }
+}
+
+impl fmt::Display for SerializableHttpResponsePacket {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "HTTP Response: \n\
+            \tVersion: {}\n\
+            \tStatus Code: {}\n\
+            \tReason: {}\n\
+            \tHeaders: {:?}\n\
+            \tPayload: {:?}",
+            self.version,
+            self.code,
+            self.reason,
+            self.headers,
+            self.payload
+        )
+    }
+}
+
+impl fmt::Display for SerializableTlsPacket {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "TLS Packet: \n\
+            \tVersion: {}\n\
+            \tMessages: {:?}\n\
+            \tLength: {}",
+            self.version,
+            self.messages,
+            self.length
+        )
     }
 }
 
@@ -986,6 +1041,24 @@ impl<'a> From<&DnsPacket<'a>> for SerializableDnsPacket {
         }
     }
 }
+impl fmt::Display for SerializableDnsPacket {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "DNS Packet: \n\
+            \tHeader: {:?}\n\
+            \tQuestions: {:?}\n\
+            \tAnswers: {:?}\n\
+            \tNameservers: {:?}\n\
+            \tAdditional: {:?}",
+            self.header,
+            self.questions,
+            self.answers,
+            self.nameservers,
+            self.additional
+        )
+    }
+}
 
 /// DNS Query request
 #[derive(Serialize, Debug, Clone)]
@@ -1200,3 +1273,24 @@ pub struct Txt {
 pub struct Unknown {
     pub data: Vec<u8>,
 }
+
+/// Modbus Packet Representation
+#[derive(Serialize, Debug, Clone)]
+pub struct SerializableModbusPacket {
+    pub address: u8,
+    pub function_code: u8,
+    pub data: Vec<u8>,
+    pub crc: Option<u16>,  // CRC is None for Modbus TCP
+}
+
+impl From<&ModbusPacket> for SerializableModbusPacket {
+    fn from(modbus_packet: &ModbusPacket) -> Self {
+        SerializableModbusPacket {
+            address: modbus_packet.address,
+            function_code: modbus_packet.function_code,
+            data: modbus_packet.data.clone(),
+            crc: modbus_packet.crc,
+        }
+    }
+}
+

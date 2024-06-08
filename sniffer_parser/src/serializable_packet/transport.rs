@@ -1,5 +1,7 @@
 //! Transport level Packets Representation
 
+use std::fmt;
+
 use pnet::packet::icmp::echo_reply::EchoReplyPacket;
 use pnet::packet::icmp::echo_request::EchoRequestPacket;
 use pnet::packet::icmp::{IcmpPacket, IcmpType, IcmpTypes};
@@ -45,6 +47,40 @@ impl<'a> From<&TcpPacket<'a>> for SerializableTcpPacket {
     }
 }
 
+impl fmt::Display for SerializableTcpPacket {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "TCP Packet: \n\
+            \tSource Port: {}\n\
+            \tDestination Port: {}\n\
+            \tSequence Number: {}\n\
+            \tAcknowledgement Number: {}\n\
+            \tData Offset: {}\n\
+            \tReserved: {}\n\
+            \tFlags: {:#x}\n\
+            \tWindow: {}\n\
+            \tChecksum: {:#x}\n\
+            \tUrgent Pointer: {}\n\
+            \tOptions: {:?}\n\
+            \tPayload Length: {}",
+            self.source,
+            self.destination,
+            self.sequence,
+            self.acknowledgement,
+            self.data_offset,
+            self.reserved,
+            self.flags,
+            self.window,
+            self.checksum,
+            self.urgent_ptr,
+            self.options,
+            self.length
+        )
+    }
+}
+
+
 /// UDP Packet Representation
 #[derive(Serialize, Debug, Clone)]
 pub struct SerializableUdpPacket {
@@ -62,6 +98,23 @@ impl<'a> From<&UdpPacket<'a>> for SerializableUdpPacket {
             length: packet.get_length(),
             checksum: packet.get_checksum(),
         }
+    }
+}
+
+impl fmt::Display for SerializableUdpPacket {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "UDP Packet: \n\
+            \tSource Port: {}\n\
+            \tDestination Port: {}\n\
+            \tLength: {}\n\
+            \tChecksum: {:#x}",
+            self.source,
+            self.destination,
+            self.length,
+            self.checksum
+        )
     }
 }
 

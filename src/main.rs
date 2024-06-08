@@ -10,21 +10,12 @@
 extern crate pnet;
 extern crate sniffer_parser;
 
-use sniffer_parser::serializable_packet::util::{
-    contains_arp, contains_dns, contains_ethernet, contains_http, contains_icmp, contains_icmp6,
-    contains_ipv4, contains_ipv6, contains_malformed, contains_tcp, contains_tls, contains_udp,
-    contains_unknokn, get_dest_ip, get_dest_mac, get_dest_port, get_source_ip, get_source_mac,
-    get_source_port,
-};
-use sniffer_parser::{parse_ethernet_frame, HeaderLength};
+
+use sniffer_parser::parse_ethernet_frame;
 
 use pnet::datalink::{self, NetworkInterface};
 
-
-use pnet::packet::ethernet::{EtherTypes, EthernetPacket, MutableEthernetPacket};
-
-
-use pnet::util::MacAddr;
+use pnet::packet::ethernet::EthernetPacket;
 
 use std::env;
 use std::io::{self, Write};
@@ -62,10 +53,11 @@ fn main() {
         match rx.next() {
             Ok(packet) => {
                 let ethernet_packet = EthernetPacket::new(packet).unwrap();
-                let mut info =0;
-                let new_packet = parse_ethernet_frame(&ethernet_packet, info);
-                info += 1;
-                println!("{:?} id : {info}", new_packet);
+                let mut _info =0;
+                let new_packet = parse_ethernet_frame(&ethernet_packet, _info);
+                _info += 1;
+                println!("{}", new_packet);
+
             }
             Err(e) => panic!("packetdump: unable to receive packet: {}", e),
         }

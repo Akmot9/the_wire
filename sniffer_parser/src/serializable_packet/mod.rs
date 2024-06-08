@@ -12,13 +12,16 @@ pub mod network;
 pub mod transport;
 pub mod util;
 
+use std::fmt;
+
+use application::SerializableModbusPacket;
 use pnet::packet::Packet;
 use pnet::{packet::ethernet::EthernetPacket, util::MacAddr};
 use serde::Serialize;
 
 use self::application::{
     SerializableDnsPacket, SerializableHttpRequestPacket, SerializableHttpResponsePacket,
-    SerializableTlsPacket,
+    SerializableTlsPacket
 };
 use self::network::{SerializableArpPacket, SerializableIpv4Packet, SerializableIpv6Packet};
 use self::transport::{
@@ -100,6 +103,33 @@ impl ParsedPacket {
     }
 }
 
+impl fmt::Display for ParsedPacket {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        //writeln!(f, "ParsedPacket ID: {}", self.id)?;
+        if let Some(link_layer_packet) = &self.link_layer_packet {
+            writeln!(f, "Link Layer Packet: {}", link_layer_packet)?;
+        } else {
+            writeln!(f, "Link Layer Packet: None")?;
+        }
+        if let Some(network_layer_packet) = &self.network_layer_packet {
+            writeln!(f, "   Network Layer Packet: {}", network_layer_packet)?;
+        } else {
+            writeln!(f, "   Network Layer Packet: None")?;
+        }
+        if let Some(transport_layer_packet) = &self.transport_layer_packet {
+            writeln!(f, "       Transport Layer Packet: {}", transport_layer_packet)?;
+        } else {
+            writeln!(f, "       Transport Layer Packet: None")?;
+        }
+        if let Some(application_layer_packet) = &self.application_layer_packet {
+            writeln!(f, "           Application Layer Packet: {}", application_layer_packet)?;
+        } else {
+            writeln!(f, "           Application Layer Packet: None")?;
+        }
+        Ok(())
+    }
+}
+
 /// All possible packet serialization options
 #[derive(Serialize, Debug, Clone)]
 #[serde(tag = "type", content = "packet")]
@@ -118,10 +148,38 @@ pub enum SerializablePacket {
     HttpResponsePacket(SerializableHttpResponsePacket),
     TlsPacket(SerializableTlsPacket),
     DnsPacket(SerializableDnsPacket),
+    ModbusPacket(SerializableModbusPacket),
 
     MalformedPacket(String),
     UnknownPacket(SerializableUnknownPacket),
 }
+
+// Implémentez le trait Display pour SerializablePacket
+impl fmt::Display for SerializablePacket {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            SerializablePacket::EthernetPacket(pkt) => write!(f, "{}", pkt),
+            SerializablePacket::ArpPacket(pkt) => write!(f, "{}", pkt),
+            SerializablePacket::Ipv4Packet(pkt) => write!(f, "{}", pkt),
+            SerializablePacket::Ipv6Packet(pkt) => write!(f, "{}", pkt),
+            SerializablePacket::EchoReplyPacket(pkt) => write!(f, "{:?}", pkt),
+            SerializablePacket::EchoRequestPacket(pkt) => write!(f, "{:?}", pkt),
+            SerializablePacket::IcmpPacket(pkt) => write!(f, "{:?}", pkt),
+            SerializablePacket::Icmpv6Packet(pkt) => write!(f, "{:?}", pkt),
+            SerializablePacket::TcpPacket(pkt) => write!(f, "{}", pkt),
+            SerializablePacket::UdpPacket(pkt) => write!(f, "{}", pkt),
+            SerializablePacket::HttpRequestPacket(pkt) => write!(f, "{}", pkt),
+            SerializablePacket::HttpResponsePacket(pkt) => write!(f, "{}", pkt),
+            SerializablePacket::TlsPacket(pkt) => write!(f, "{}", pkt),
+            SerializablePacket::DnsPacket(pkt) => write!(f, "{}", pkt),
+            SerializablePacket::MalformedPacket(s) => write!(f, "Malformed Packet: {}", s),
+            SerializablePacket::UnknownPacket(pkt) => write!(f, "{}", pkt),
+            SerializablePacket::ModbusPacket(pkt) => write!(f, "{:?}", pkt),
+        }
+    }
+}
+
+
 
 /// Ethernet Packet Representation
 #[derive(Serialize, Debug, Clone)]
@@ -143,6 +201,48 @@ impl<'a> From<&EthernetPacket<'a>> for SerializableEthernetPacket {
     }
 }
 
+/// Trait for displaying in different ways
+pub trait DebugDisplay {
+    fn display_with_payload(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result;
+    fn display_without_payload(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result;
+}
+
+impl DebugDisplay for SerializableEthernetPacket {
+    fn display_with_payload(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Ethernet Packet: \n\
+            \tDestination: {}\n\
+            \tSource: {}\n\
+            \tEthertype: {}\n\
+            \tPayload: {:?}",
+            self.destination,
+            self.source,
+            self.ethertype,
+            self.payload
+        )
+    }
+
+    fn display_without_payload(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Ethernet Packet: \n\
+            \tDestination: {}\n\
+            \tSource: {}\n\
+            \tEthertype: {}",
+            self.destination,
+            self.source,
+            self.ethertype
+        )
+    }
+}
+
+impl fmt::Display for SerializableEthernetPacket {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.display_without_payload(f)
+    }
+}
+
 /// Unknown Packet Representation
 #[derive(Serialize, Debug, Clone)]
 pub struct SerializableUnknownPacket {
@@ -160,5 +260,21 @@ impl<'a> From<&EthernetPacket<'a>> for SerializableUnknownPacket {
             ethertype: packet.get_ethertype().to_string(),
             length: packet.packet().len(),
         }
+    }
+}
+impl fmt::Display for SerializableUnknownPacket {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Unknown Packet: \n\
+            \tDestination: {}\n\
+            \tSource: {}\n\
+            \tEthertype: {}\n\
+            \tLength: {}",
+            self.destination,
+            self.source,
+            self.ethertype,
+            self.length
+        )
     }
 }

@@ -17,7 +17,8 @@ pub fn handle_dns_packet(
     packet: &[u8],
     parsed_packet: &mut ParsedPacket,
 ) {
-    if let Ok(dns_packet) = DnsPacket::parse(packet) {
+    if let Ok(dns_packet) = 
+        DnsPacket::parse(packet) {
         debug!(
             "DNS Packet: {}:{} > {}:{}; ID: {}, Questions: {}, Answers: {}, Authority: {}, Additional: {}",
             source_ip,

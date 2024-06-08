@@ -2,7 +2,13 @@
 
 use pnet::packet::icmp::{echo_reply, echo_request, IcmpPacket, IcmpTypes};
 use pnet::packet::icmpv6::Icmpv6Packet;
-use pnet::packet::ip::{IpNextHeaderProtocol, IpNextHeaderProtocols};
+use pnet::packet::ip::{IpNextHeaderProtocol, IpNextHeaderProtocols::{
+        Udp as UDP,
+        Tcp as TCP,
+        Icmp as ICMP,
+        Icmpv6 as ICMPV6,
+    }
+};
 use pnet::packet::tcp::TcpPacket;
 use pnet::packet::udp::UdpPacket;
 
@@ -110,12 +116,12 @@ pub fn handle_transport_protocol(
     parsed_packet: &mut ParsedPacket,
 ) {
     return match protocol {
-        IpNextHeaderProtocols::Udp => handle_udp_packet(source, destination, packet, parsed_packet),
-        IpNextHeaderProtocols::Tcp => handle_tcp_packet(source, destination, packet, parsed_packet),
-        IpNextHeaderProtocols::Icmp => {
+        UDP => handle_udp_packet(source, destination, packet, parsed_packet),
+        TCP => handle_tcp_packet(source, destination, packet, parsed_packet),
+        ICMP => {
             handle_icmp_packet(source, destination, packet, parsed_packet)
         }
-        IpNextHeaderProtocols::Icmpv6 => {
+        ICMPV6 => {
             handle_icmpv6_packet(source, destination, packet, parsed_packet)
         }
         _ => {

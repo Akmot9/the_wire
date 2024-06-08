@@ -1,5 +1,6 @@
 //! Network level Packets Representation
 
+use std::fmt;
 use std::net::{Ipv4Addr, Ipv6Addr};
 
 use pnet::packet::arp::{ArpOperations, ArpPacket};
@@ -45,6 +46,35 @@ impl<'a> From<&ArpPacket<'a>> for SerializableArpPacket {
     }
 }
 
+impl fmt::Display for SerializableArpPacket {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "ARP Packet: \n\
+            \tHardware Type: {}\n\
+            \tProtocol Type: {}\n\
+            \tHW Addr Length: {}\n\
+            \tProto Addr Length: {}\n\
+            \tOperation: {}\n\
+            \tSender HW Addr: {}\n\
+            \tSender Proto Addr: {}\n\
+            \tTarget HW Addr: {}\n\
+            \tTarget Proto Addr: {}\n\
+            \tLength: {}",
+            self.hardware_type,
+            self.protocol_type,
+            self.hw_addr_len,
+            self.proto_addr_len,
+            self.operation,
+            self.sender_hw_addr,
+            self.sender_proto_addr,
+            self.target_hw_addr,
+            self.target_proto_addr,
+            self.length
+        )
+    }
+}
+
 /// IPv6 Packet Representation
 #[derive(Serialize, Debug, Clone)]
 pub struct SerializableIpv6Packet {
@@ -76,6 +106,33 @@ impl<'a> From<&Ipv6Packet<'a>> for SerializableIpv6Packet {
             destination: packet.get_destination(),
             length: packet.payload().len(),
         }
+    }
+}
+
+impl fmt::Display for SerializableIpv6Packet {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "IPv6 Packet: \n\
+            \tVersion: {}\n\
+            \tTraffic Class: {}\n\
+            \tFlow Label: {}\n\
+            \tPayload Length: {}\n\
+            \tNext Header: {}\n\
+            \tHop Limit: {}\n\
+            \tSource: {}\n\
+            \tDestination: {}\n\
+            \tLength: {}",
+            self.version,
+            self.traffic_class,
+            self.flow_label,
+            self.payload_length,
+            self.next_header,
+            self.hop_limit,
+            self.source,
+            self.destination,
+            self.length
+        )
     }
 }
 
@@ -120,5 +177,42 @@ impl<'a> From<&Ipv4Packet<'a>> for SerializableIpv4Packet {
             destination: packet.get_destination(),
             length: packet.payload().len(),
         }
+    }
+}
+
+impl fmt::Display for SerializableIpv4Packet {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "IPv4 Packet: \n\
+            \tVersion: {}\n\
+            \tHeader Length: {}\n\
+            \tDSCP: {}\n\
+            \tECN: {}\n\
+            \tTotal Length: {}\n\
+            \tIdentification: {}\n\
+            \tFlags: {}\n\
+            \tFragment Offset: {}\n\
+            \tTTL: {}\n\
+            \tNext Level Protocol: {}\n\
+            \tChecksum: {}\n\
+            \tSource: {}\n\
+            \tDestination: {}\n\
+            \tLength: {}",
+            self.version,
+            self.header_length,
+            self.dscp,
+            self.ecn,
+            self.total_length,
+            self.identification,
+            self.flags,
+            self.fragment_offset,
+            self.ttl,
+            self.next_level_protocol,
+            self.checksum,
+            self.source,
+            self.destination,
+            self.length
+        )
     }
 }
